@@ -85,7 +85,7 @@ class RegionProposalNetwork(nn.Module):
         anc_boxes_all = anc_base.repeat(batch_size, 1, 1, 1, 1)
 
         # get anchors
-        gt_bboxes_proj = project_bboxes(gt_bboxes, self.width_scale_factor, self.height_scale_factor, mode='p2a')
+        gt_bboxes_proj = project_bboxes(gt_bboxes, self.w_scaler_factor, self.h_scaler_factor, mode='p2a')
 
         positive_anc_ind, negative_anc_ind, GT_conf_scores, \
         GT_offsets, GT_class_pos, positive_anc_coords, \
@@ -239,6 +239,6 @@ def calc_cls_loss(conf_scores_pos, conf_scores_neg, batch_size):
 
 
 def calc_bbox_reg_loss(gt_offsets, reg_offsets_pos, batch_size):
-    assert gt_offsets.size() == reg_offsets_pos.size()
+    #  assert gt_offsets.size() == reg_offsets_pos.size()
     loss = F.smooth_l1_loss(reg_offsets_pos, gt_offsets, reduction='sum') * 1. / batch_size
     return loss

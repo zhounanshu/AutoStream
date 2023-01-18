@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import random
 import matplotlib.patches as patches
 from AutoStream.src.monitor.utils import *
-from model import *
+from AutoStream.src.monitor.model import *
 import os
 
 import torch
@@ -15,6 +15,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from torch.nn.utils.rnn import pad_sequence
+from torch import onnx
 
 
 class ObjectDetectionDataset(Dataset):
@@ -79,9 +80,13 @@ class ObjectDetectionDataset(Dataset):
 
 img_width = 640
 img_height = 480
-annotation_path = "data/annotations.xml"
-image_dir = os.path.join("data", "images")
-name2idx = {'pad': -1, 'camel': 0, 'bird': 1}
+# annotation_path = "data/annotations.xml"
+# name2idx = {'pad': -1, 'camel': 0, 'bird': 1}
+# image_dir = os.path.join("data", "images")
+annotation_path = "E:/projects/AutoStream/src/images/annotations.xml"
+name2idx = {'pad': -1, 'cloth': 0}
+image_dir = os.path.join("E:/projects/AutoStream/src", "images")
+
 idx2name = {v:k for k, v in name2idx.items()}
 
 
@@ -170,3 +175,109 @@ fig, _ = display_grid(anc_pts_x_proj, anc_pts_y_proj, fig, axes[0], (anc_pts_x_p
 fig, _ = display_grid(anc_pts_x_proj, anc_pts_y_proj, fig, axes[1], (anc_pts_x_proj[sp_2[0]], anc_pts_y_proj[sp_2[1]]))
 fig, _ = display_bbox(bboxes_1, fig, axes[0])
 fig, _ = display_bbox(bboxes_2, fig, axes[1])
+
+pos_thresh = 0.7
+neg_thresh = 0.3
+
+# project gt bboxes onto the feature map
+gt_bboxes_proj = project_bboxes(gt_bboxes_all, width_scale_factor, height_scale_factor, mode='p2a')
+
+positive_anc_ind, negative_anc_ind, GT_conf_scores, \
+GT_offsets, GT_class_pos, positive_anc_coords, \
+negative_anc_coords, positive_anc_ind_sep = get_req_anchors(anc_boxes_all, gt_bboxes_proj, gt_classes_all, pos_thresh, neg_thresh)
+
+# project anchor coords to the image space
+pos_anc_proj = project_bboxes(positive_anc_coords, width_scale_factor, height_scale_factor, mode='a2p')
+neg_anc_proj = project_bboxes(negative_anc_coords, width_scale_factor, height_scale_factor, mode='a2p')
+
+# grab +ve and -ve anchors for each image separately
+
+anc_idx_1 = torch.where(positive_anc_ind_sep == 0)[0]
+anc_idx_2 = torch.where(positive_anc_ind_sep == 1)[0]
+
+pos_anc_1 = pos_anc_proj[anc_idx_1]
+pos_anc_2 = pos_anc_proj[anc_idx_2]
+
+neg_anc_1 = neg_anc_proj[anc_idx_1]
+neg_anc_2 = neg_anc_proj[anc_idx_2]
+
+nrows, ncols = (1, 2)
+fig, axes = plt.subplots(nrows, ncols, figsize=(16, 8))
+
+fig, axes = display_img(img_data_all, fig, axes)
+
+# plot groundtruth bboxes
+fig, _ = display_bbox(gt_bboxes_all[0], fig, axes[0])
+fig, _ = display_bbox(gt_bboxes_all[1], fig, axes[1])
+
+# plot positive anchor boxes
+fig, _ = display_bbox(pos_anc_1, fig, axes[0], color='g')
+fig, _ = display_bbox(pos_anc_2, fig, axes[1], color='g')
+
+# plot negative anchor boxes
+fig, _ = display_bbox(neg_anc_1, fig, axes[0], color='r')
+fig, _ = display_bbox(neg_anc_2, fig, axes[1], color='r')
+
+plt.show()
+
+# building model
+img_size = (img_height, img_width)
+out_size = (out_h, out_w)
+n_classes = len(name2idx) - 1 # exclude pad idx
+roi_size = (2, 2)
+
+detector = TwoStageDetector(img_size, out_size, out_c, n_classes, roi_size)
+
+detector.eval()
+total_loss = detector(img_batch, gt_bboxes_batch, gt_classes_batch)
+proposals_final, conf_scores_final, classes_final = detector.inference(img_batch)
+
+
+def save_model(model, img_batch, gt_bboxes_batch, gt_cls_batch):
+    x = torch.randn(img_batch)
+    y = torch.randn(gt_bboxes_batch)
+    z = torch.randn(gt_cls_batch)
+    onnx.export(model, (x, y, z), 'faster_rcnn.onnx', export_params=True, opset_version=11,
+                do_constant_folding=True, input_names=['img_input', 'gt_bbox_input', 'gt_cls_input'],
+                output_names=['output'], dynamic_axes={
+            'img_input': {0: 'batch_size'},
+            'gt_bbox_input': {0: 'batch_size'},
+            'gt_cls_input': {0: 'batch_size'},
+            'output': {0: 'batch_size'}})
+
+
+def training_loop(model, learning_rate, train_dataloader, n_epochs):
+    model_path = './models/faster_rcnn.pkl'
+    if os.path.exists(model_path):
+        model = torch.load(model_path)
+        return 0
+
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    model.train()
+    loss_list = []
+
+    for i in tqdm(range(n_epochs)):
+        total_loss = 0
+        for img_batch, gt_bboxes_batch, gt_classes_batch in train_dataloader:
+            # forward pass
+            loss = model(img_batch, gt_bboxes_batch, gt_classes_batch)
+
+            # backpropagation
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        loss_list.append(total_loss)
+    torch.save(model, './models/faster_rcnn.pkl')
+    save_model(model, (1, 3, 480, 640), (1, 6, 4), (1, 6))
+    return loss_list
+
+learning_rate = 1e-3
+n_epochs = 100
+
+# loss_list = training_loop(detector, learning_rate, od_dataloader, n_epochs)
+model = torch.load('./models/faster_rcnn.pkl')
+save_model(model, (1, 3, 480, 640), (1, 6, 4), (1, 6))

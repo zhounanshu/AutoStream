@@ -278,8 +278,6 @@ def get_req_anchors(anc_boxes_all, gt_bboxes_all, gt_classes_all, pos_thresh=0.7
            positive_anc_coords, negative_anc_coords, positive_anc_ind_sep
 
 
-# # -------------- Visualization utils ----------------
-
 def display_img(img_data, fig, axes):
     for i, img in enumerate(img_data):
         if type(img) == torch.Tensor:

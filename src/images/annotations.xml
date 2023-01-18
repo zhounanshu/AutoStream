@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <job>
+      <id>1</id>
+      <size>2</size>
+      <mode>annotation</mode>
+      <overlap>0</overlap>
+      <bugtracker></bugtracker>
+      <created>2022-12-30 12:00:52.972955+00:00</created>
+      <updated>2022-12-30 12:17:53.978235+00:00</updated>
+      <subset>default</subset>
+      <start_frame>0</start_frame>
+      <stop_frame>1</stop_frame>
+      <frame_filter></frame_filter>
+      <segments>
+        <segment>
+          <id>1</id>
+          <start>0</start>
+          <stop>1</stop>
+          <url>http://localhost:8080/api/jobs/1</url>
+        </segment>
+      </segments>
+      <owner>
+        <username>marvin</username>
+        <email>marvin@gmail.com</email>
+      </owner>
+      <assignee></assignee>
+      <labels>
+        <label>
+          <name>cloth</name>
+          <color>#fa3253</color>
+          <type>rectangle</type>
+          <attributes>
+          </attributes>
+        </label>
+      </labels>
+    </job>
+    <dumped>2022-12-30 12:19:14.026053+00:00</dumped>
+  </meta>
+  <image id="0" name="img1.jpg" width="238" height="240">
+    <box label="cloth" occluded="0" source="manual" xtl="10.19" ytl="129.25" xbr="62.59" ybr="172.22" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="68.18" ytl="129.95" xbr="92.29" ybr="171.87" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="162.86" ytl="83.48" xbr="222.94" ybr="125.41" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="74.82" ytl="82.09" xbr="128.97" ybr="125.06" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="11.59" ytl="37.37" xbr="63.64" ybr="79.29" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="8.45" ytl="84.53" xbr="72.38" ybr="124.36" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="94.73" ytl="129.60" xbr="155.52" ybr="172.57" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="124.43" ytl="35.62" xbr="182.07" ybr="79.99" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="133.86" ytl="82.79" xbr="160.06" ybr="125.06" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="69.93" ytl="35.62" xbr="118.49" ybr="78.94" z_order="0">
+    </box>
+  </image>
+  <image id="1" name="img2.jpg" width="238" height="240">
+    <box label="cloth" occluded="0" source="manual" xtl="163.55" ytl="36.32" xbr="219.45" ybr="82.79" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="16.48" ytl="35.28" xbr="59.45" ybr="80.69" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="117.79" ytl="36.67" xbr="158.66" ybr="81.39" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="7.05" ytl="128.20" xbr="89.84" ybr="179.90" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="8.45" ytl="85.58" xbr="68.53" ybr="125.41" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="73.42" ytl="84.88" xbr="141.55" ybr="134.84" z_order="0">
+    </box>
+    <box label="cloth" occluded="0" source="manual" xtl="64.34" ytl="36.67" xbr="112.90" ybr="79.99" z_order="0">
+    </box>
+  </image>
+</annotations>
